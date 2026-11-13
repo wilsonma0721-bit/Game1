@@ -1,0 +1,2026 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星际引力狂怒：轨道舰队大作战 | Orbital Fury: Slingshot Armada</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans SC', 'Orbitron', sans-serif;
+            background-color: #030712;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* Custom Glassmorphism Styling */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-btn {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-btn:hover:not(:disabled) {
+            border-color: rgba(56, 189, 248, 0.6);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .glass-btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .glass-btn.active {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.4), rgba(3, 105, 161, 0.6));
+            border-color: #38bdf8;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.8); }
+
+        canvas { touch-action: none; }
+    </style>
+</head>
+<body class="w-full h-screen bg-slate-950 text-white flex flex-col relative">
+
+    <!-- Top Navigation & Control Bar -->
+    <header class="w-full h-14 bg-slate-900/90 border-b border-slate-800/80 px-4 flex items-center justify-between z-20 shrink-0 backdrop-blur-md">
+        <!-- Title & Status -->
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <span class="text-xl">🪐</span>
+            </div>
+            <div>
+                <h1 class="text-base font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-sky-200 to-indigo-300 font-orbitron">
+                    星际引力狂怒 <span class="text-xs font-normal text-cyan-400/80">| Orbital Fury</span>
+                </h1>
+                <p class="text-[10px] text-slate-400 flex items-center gap-2">
+                    <span id="levelNameDisplay" class="text-amber-400 font-semibold">Level 1: 行星引力入门</span>
+                    <span class="text-slate-600">|</span>
+                    <span id="targetCountDisplay" class="text-emerald-400 font-mono">目标: 0/10</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Level Selector & Gravity Field Mode Preset -->
+        <div class="flex items-center space-x-3 text-xs">
+            <div class="flex items-center space-x-1 bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                <span class="text-slate-400">关卡:</span>
+                <select id="levelSelect" class="bg-transparent text-cyan-300 font-bold outline-none cursor-pointer">
+                    <option value="0" class="bg-slate-900">关卡 1 - 引力入门</option>
+                    <option value="1" class="bg-slate-900">关卡 2 - 双子星系</option>
+                    <option value="2" class="bg-slate-900">关卡 3 - 黑洞缝隙</option>
+                    <option value="3" class="bg-slate-900">关卡 4 - 三体混沌陷阱</option>
+                    <option value="4" class="bg-slate-900">关卡 5 - 白洞排斥要塞</option>
+                    <option value="5" class="bg-slate-900">关卡 6 - 小行星阵列要塞</option>
+                    <option value="6" class="bg-slate-900">关卡 7 - 终极轨道星盟舰队</option>
+                    <option value="7" class="bg-slate-900">关卡 8 - 自由沙盒演习场</option>
+                </select>
+            </div>
+
+            <div class="flex items-center space-x-1 bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                <span class="text-slate-400">环境重力:</span>
+                <select id="gravityModeSelect" class="bg-transparent text-amber-300 font-bold outline-none cursor-pointer">
+                    <option value="0.25" selected class="bg-slate-900">0.25G 微重力 (默认)</option>
+                    <option value="0.0" class="bg-slate-900">0.00G 纯天体轨道</option>
+                    <option value="1.0" class="bg-slate-900">1.00G 标准地表重力</option>
+                </select>
+            </div>
+
+            <!-- Toggle Buttons -->
+            <button id="toggleGridBtn" class="glass-btn px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white flex items-center gap-1" title="切换时空扭曲网格">
+                <span>🌐 网格</span>
+            </button>
+            <button id="toggleTelemetryBtn" class="glass-btn px-2.5 py-1.5 rounded-lg text-cyan-300 hover:text-white flex items-center gap-1 active" title="切换遥测面板">
+                <span>📊 遥测</span>
+            </button>
+            <button id="toggleSoundBtn" class="glass-btn px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-white flex items-center gap-1" title="音频开关">
+                <span id="soundIcon">🔊 音效</span>
+            </button>
+            <button id="resetLevelBtn" class="glass-btn px-3 py-1.5 rounded-lg bg-rose-950/40 text-rose-300 border-rose-800/50 hover:bg-rose-900/60 font-semibold">
+                🔄 重置关卡
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Area with Canvas and Overlays -->
+    <div class="relative flex-1 w-full h-full overflow-hidden">
+        <!-- Main Game Canvas -->
+        <canvas id="gameCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+
+        <!-- Dynamic Glassmorphism Telemetry Data Panel (Top Right) -->
+        <div id="telemetryPanel" class="absolute top-4 right-4 w-72 glass-panel rounded-xl p-3 text-xs space-y-2 pointer-events-auto transition-all duration-300 z-10 border border-cyan-500/30">
+            <div class="flex items-center justify-between border-b border-slate-700/60 pb-1.5">
+                <span class="font-extrabold text-cyan-400 flex items-center gap-1 font-orbitron">
+                    <span class="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                    实时物理遥测 telemetry
+                </span>
+                <span id="metDisplay" class="font-mono text-slate-400 text-[11px]">MET: 00:00.0</span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2 font-mono">
+                <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                    <div class="text-[10px] text-slate-400">速度 Speed</div>
+                    <div id="telemetrySpeed" class="text-sm font-bold text-sky-300">0.00 m/s</div>
+                </div>
+                <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                    <div class="text-[10px] text-slate-400">分量 (Vx, Vy)</div>
+                    <div id="telemetryVxy" class="text-xs font-semibold text-slate-200">0.0, 0.0</div>
+                </div>
+                <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                    <div class="text-[10px] text-slate-400">合加速度 Accel</div>
+                    <div id="telemetryAccel" class="text-sm font-bold text-amber-300">0.00 G</div>
+                </div>
+                <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                    <div class="text-[10px] text-slate-400">动能 Kinetic Ek</div>
+                    <div id="telemetryEk" class="text-sm font-bold text-emerald-300">0.00 MJ</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/80 p-2 rounded-lg border border-slate-800 font-mono space-y-1">
+                <div class="flex justify-between text-[11px]">
+                    <span class="text-slate-400">主引力天体:</span>
+                    <span id="telemetryDominant" class="text-purple-300 font-semibold">无 (深空)</span>
+                </div>
+                <div class="flex justify-between text-[11px]">
+                    <span class="text-slate-400">地表相对高度:</span>
+                    <span id="telemetryAlt" class="text-amber-200">-- km</span>
+                </div>
+                <div class="flex justify-between text-[11px]">
+                    <span class="text-slate-400">近拱点 (Pe) 预测:</span>
+                    <span id="telemetryPe" class="text-cyan-300">-- km</span>
+                </div>
+            </div>
+            
+            <div class="text-[10px] text-slate-400/80 flex justify-between items-center px-1">
+                <span>RK4 物理求解器 active</span>
+                <span id="boostStatus" class="text-emerald-400 font-semibold">切线加速: 就绪</span>
+            </div>
+        </div>
+
+        <!-- Left Controls: Launch Parameters Sliders & Info Panel -->
+        <div class="absolute top-4 left-4 w-64 glass-panel rounded-xl p-3.5 space-y-3 pointer-events-auto z-10">
+            <div class="flex justify-between items-center border-b border-slate-700/60 pb-1.5">
+                <span class="font-bold text-amber-400 text-xs flex items-center gap-1 font-orbitron">
+                    🚀 发射控制台 LAUNCH CONTROL
+                </span>
+                <span id="ammoCountBadge" class="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded text-[11px] font-mono font-bold">
+                    备弹: 10
+                </span>
+            </div>
+
+            <!-- Launch Angle & Power Sliders -->
+            <div class="space-y-2 text-xs">
+                <div>
+                    <div class="flex justify-between text-slate-300 mb-1">
+                        <span>发射角度 (Angle):</span>
+                        <span id="angleVal" class="font-mono text-cyan-300">45°</span>
+                    </div>
+                    <input type="range" id="angleSlider" min="0" max="90" value="45" step="1" 
+                           class="w-full accent-cyan-400 bg-slate-800 rounded-lg cursor-pointer h-1.5">
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-slate-300 mb-1">
+                        <span>初速功率 (Power):</span>
+                        <span id="powerVal" class="font-mono text-cyan-300">75 m/s</span>
+                    </div>
+                    <input type="range" id="powerSlider" min="20" max="150" value="75" step="1" 
+                           class="w-full accent-cyan-400 bg-slate-800 rounded-lg cursor-pointer h-1.5">
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-slate-300 mb-1">
+                        <span>弹头质量 (Mass):</span>
+                        <span id="massVal" class="font-mono text-amber-300">10.0 kg</span>
+                    </div>
+                    <input type="range" id="massSlider" min="1" max="50" value="10" step="0.5" 
+                           class="w-full accent-amber-400 bg-slate-800 rounded-lg cursor-pointer h-1.5">
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-slate-300 mb-1">
+                        <span>引力常数 (G Factor):</span>
+                        <span id="gVal" class="font-mono text-purple-300">1.0x</span>
+                    </div>
+                    <input type="range" id="gSlider" min="0.1" max="3.0" value="1.0" step="0.1" 
+                           class="w-full accent-purple-400 bg-slate-800 rounded-lg cursor-pointer h-1.5">
+                </div>
+            </div>
+
+            <!-- Slingshot / Aim Helper hint -->
+            <div class="bg-slate-900/90 rounded-lg p-2 text-[11px] text-slate-400 border border-slate-800">
+                💡 <span class="text-slate-300">操作提示:</span> 可直接在画布上拖拽炮台进行弹弓拉力瞄准；右键或 <kbd class="px-1 bg-slate-800 text-cyan-300 rounded">E</kbd> 触发切线加速。
+            </div>
+        </div>
+
+        <!-- Notification / Toast Message Area -->
+        <div id="toastContainer" class="absolute top-16 left-1/2 -translate-x-1/2 pointer-events-none z-30 flex flex-col items-center space-y-2"></div>
+    </div>
+
+    <!-- Bottom Action & Ammo Selector HUD Bar -->
+    <footer class="w-full bg-slate-900/95 border-t border-slate-800 px-4 py-2.5 z-20 shrink-0 backdrop-blur-md flex flex-col md:flex-row items-center justify-between gap-2">
+        <!-- Ammo Type Selector Buttons -->
+        <div class="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+            <button data-ammo="kinetic" class="ammo-btn glass-btn active px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-cyan-300 shrink-0">
+                <span>💥 动能弹</span>
+                <span class="text-[10px] opacity-75 font-mono">[1]</span>
+            </button>
+            <button data-ammo="cluster" class="ammo-btn glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-amber-300 shrink-0">
+                <span>✨ 集束分裂</span>
+                <span class="text-[10px] opacity-75 font-mono">[2]</span>
+            </button>
+            <button data-ammo="blackhole" class="ammo-btn glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-purple-300 shrink-0">
+                <span>🌀 奇点黑洞</span>
+                <span class="text-[10px] opacity-75 font-mono">[3]</span>
+            </button>
+            <button data-ammo="emp" class="ammo-btn glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-blue-300 shrink-0">
+                <span>⚡ 脉冲电磁</span>
+                <span class="text-[10px] opacity-75 font-mono">[4]</span>
+            </button>
+            <button data-ammo="beam" class="ammo-btn glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-emerald-300 shrink-0">
+                <span>📉 极光穿透</span>
+                <span class="text-[10px] opacity-75 font-mono">[5]</span>
+            </button>
+        </div>
+
+        <!-- Special Active Ability Actions & Fire Button -->
+        <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
+            <!-- ⚡ Manual Tangential Acceleration Burst -->
+            <button id="tangentialBurstBtn" class="glass-btn px-3 py-2 rounded-xl text-xs font-bold text-amber-300 border-amber-500/40 hover:border-amber-400 flex items-center gap-1.5 shadow-lg shadow-amber-500/10">
+                <span class="animate-pulse">⚡</span> 切线加速 <span class="bg-amber-950/80 text-amber-300 text-[10px] px-1 rounded border border-amber-700/50">[E / 右键]</span>
+            </button>
+
+            <!-- 💥 Detonate / Skill trigger -->
+            <button id="detonateBtn" class="glass-btn px-3 py-2 rounded-xl text-xs font-bold text-purple-300 border-purple-500/40 hover:border-purple-400 flex items-center gap-1.5">
+                <span>💥</span> 提前引爆/飞猪 <span class="bg-purple-950/80 text-purple-300 text-[10px] px-1 rounded border border-purple-700/50">[SPACE]</span>
+            </button>
+
+            <!-- 🌀 Wormhole Portal Placement -->
+            <button id="wormholeBtn" class="glass-btn px-3 py-2 rounded-xl text-xs font-bold text-cyan-300 border-cyan-500/40 hover:border-cyan-400 flex items-center gap-1.5">
+                <span>🌀</span> 放置虫洞 <span class="bg-cyan-950/80 text-cyan-300 text-[10px] px-1 rounded border border-cyan-700/50">[W]</span>
+            </button>
+
+            <!-- 🚀 Fire Button -->
+            <button id="fireBtn" class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 font-extrabold text-xs text-slate-950 shadow-lg shadow-cyan-500/30 active:scale-95 transition-all flex items-center gap-1.5 font-orbitron">
+                <span>🚀</span> 开火 FIRE
+            </button>
+        </div>
+    </footer>
+
+    <!-- Game Over / Victory Modal -->
+    <div id="resultModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 hidden">
+        <div class="glass-panel p-6 rounded-2xl max-w-md w-full text-center space-y-4 border border-cyan-500/40 shadow-2xl">
+            <div id="modalIcon" class="text-5xl">🏆</div>
+            <h2 id="modalTitle" class="text-2xl font-black text-cyan-300 font-orbitron">任务完成 MISSION ACCOMPLISHED</h2>
+            <p id="modalDesc" class="text-sm text-slate-300">你成功消灭了该区域的所有敌方轨道舰队！</p>
+            
+            <div class="bg-slate-900/90 rounded-xl p-3 grid grid-cols-2 gap-2 text-xs font-mono border border-slate-800">
+                <div>
+                    <span class="text-slate-400">总得分 Score:</span>
+                    <div id="modalScore" class="text-lg font-bold text-amber-400">0</div>
+                </div>
+                <div>
+                    <span class="text-slate-400">剩余备弹 Bonus:</span>
+                    <div id="modalAmmoBonus" class="text-lg font-bold text-emerald-400">+0</div>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-3 pt-2">
+                <button id="modalRetryBtn" class="glass-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-300">
+                    🔄 重新挑战
+                </button>
+                <button id="modalNextBtn" class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/30">
+                    下一关卡 NEXT LEVEL ▶
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GAME SCRIPT -->
+    <script>
+        // --- Web Audio Procedural Sound Synthesizer ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playLaunch() {
+                if (!this.enabled || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.35);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+
+            playBurst() {
+                if (!this.enabled || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                // Sonic boom high synth pitch + noise puff
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+
+            playExplosion(isBig = false) {
+                if (!this.enabled || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const dur = isBig ? 0.7 : 0.4;
+                const bufferSize = this.ctx.sampleRate * dur;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(isBig ? 600 : 900, now);
+                filter.frequency.exponentialRampToValueAtTime(50, now + dur);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(isBig ? 0.6 : 0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start(now);
+            }
+
+            playPigSqueak() {
+                if (!this.enabled || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.linearRampToValueAtTime(900, now + 0.08);
+                osc.frequency.linearRampToValueAtTime(700, now + 0.15);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            }
+
+            playWormhole() {
+                if (!this.enabled || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.25);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+        }
+
+        const sounds = new SoundEngine();
+
+        // --- GAME ENGINE & STATE ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = 0, height = 0;
+        function resizeCanvas() {
+            width = canvas.width = canvas.clientWidth;
+            height = canvas.height = canvas.clientHeight;
+        }
+
+        // Global State Variables
+        let currentLevelIdx = 0;
+        let ammoCount = 10;
+        let score = 0;
+        let combo = 0;
+        let gameTime = 0; // MET seconds
+        let isGameOver = false;
+        let isGridEnabled = true;
+        let isTelemetryEnabled = true;
+
+        // Slingshot / Launch Controls
+        let cannon = { x: 120, y: 0, angle: 45, power: 75, mass: 10, gFactor: 1.0, isDragging: false };
+        let currentAmmoType = 'kinetic';
+
+        // Physics Global Parameters
+        let globalGravityMode = 0.25; // 0.25G default microgravity
+
+        // Objects Containers
+        let celestialBodies = [];
+        let targets = [];
+        let particles = [];
+        let spacePigs = [];
+        let activeProjectiles = [];
+        let activeSingularities = [];
+        let wormhole = { entrance: null, exit: null, placementMode: false };
+
+        // --- LEVEL DEFINITIONS (Levels 1-8) ---
+        const LEVELS = [
+            {
+                name: "Level 1: 行星引力入门",
+                ammo: 10,
+                bodies: [
+                    { x: 0.5, y: 0.5, radius: 45, mass: 2200, color: '#38bdf8', type: 'planet', name: '湛蓝原星' }
+                ],
+                targets: [
+                    { type: 'drone', relX: 0.65, relY: 0.3, hp: 1, maxHp: 1, radius: 12, orbit: true, orbitCenter: 0, orbitRadius: 180, orbitSpeed: 0.015, angle: 0 },
+                    { type: 'drone', relX: 0.65, relY: 0.7, hp: 1, maxHp: 1, radius: 12, orbit: true, orbitCenter: 0, orbitRadius: 180, orbitSpeed: 0.015, angle: Math.PI },
+                    { type: 'turret', relX: 0.75, relY: 0.2, hp: 1, maxHp: 1, radius: 14 },
+                    { type: 'turret', relX: 0.75, relY: 0.5, hp: 1, maxHp: 1, radius: 14 },
+                    { type: 'turret', relX: 0.75, relY: 0.8, hp: 1, maxHp: 1, radius: 14 },
+                    { type: 'barrel', relX: 0.7, relY: 0.4, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'barrel', relX: 0.7, relY: 0.6, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'asteroid', relX: 0.6, relY: 0.45, hp: 2, maxHp: 2, radius: 16 },
+                    { type: 'asteroid', relX: 0.6, relY: 0.55, hp: 2, maxHp: 2, radius: 16 },
+                    { type: 'cruiser', relX: 0.85, relY: 0.5, hp: 3, maxHp: 3, radius: 22, shield: true }
+                ]
+            },
+            {
+                name: "Level 2: 双子星系重力场",
+                ammo: 12,
+                bodies: [
+                    { x: 0.45, y: 0.35, radius: 40, mass: 1800, color: '#f59e0b', type: 'planet', name: '赤炎双子 A' },
+                    { x: 0.55, y: 0.65, radius: 38, mass: 1600, color: '#ec4899', type: 'planet', name: '紫霞双子 B' }
+                ],
+                targets: [
+                    { type: 'dreadnought', relX: 0.85, relY: 0.5, hp: 8, maxHp: 8, radius: 28, shield: true, name: '无畏号领舰' },
+                    { type: 'drone', relX: 0.75, relY: 0.3, hp: 1, maxHp: 1, radius: 12, orbit: true, orbitCenter: 0, orbitRadius: 140, orbitSpeed: 0.02, angle: 0 },
+                    { type: 'drone', relX: 0.75, relY: 0.7, hp: 1, maxHp: 1, radius: 12, orbit: true, orbitCenter: 1, orbitRadius: 130, orbitSpeed: -0.02, angle: 1 },
+                    { type: 'turret', relX: 0.7, relY: 0.2, hp: 1, maxHp: 1, radius: 14 },
+                    { type: 'turret', relX: 0.7, relY: 0.8, hp: 1, maxHp: 1, radius: 14 },
+                    { type: 'barrel', relX: 0.8, relY: 0.35, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'barrel', relX: 0.8, relY: 0.65, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'asteroid', relX: 0.65, relY: 0.25, hp: 2, maxHp: 2, radius: 15 },
+                    { type: 'asteroid', relX: 0.65, relY: 0.75, hp: 2, maxHp: 2, radius: 15 },
+                    { type: 'asteroid', relX: 0.78, relY: 0.5, hp: 2, maxHp: 2, radius: 15 },
+                    { type: 'cruiser', relX: 0.82, relY: 0.2, hp: 3, maxHp: 3, radius: 20 },
+                    { type: 'cruiser', relX: 0.82, relY: 0.8, hp: 3, maxHp: 3, radius: 20 }
+                ]
+            },
+            {
+                name: "Level 3: 黑洞缝隙盲区",
+                ammo: 11,
+                bodies: [
+                    { x: 0.5, y: 0.5, radius: 24, mass: 4500, color: '#a855f7', type: 'blackhole', name: '坍缩奇点 BH-01' }
+                ],
+                targets: [
+                    { type: 'dreadnought', relX: 0.85, relY: 0.5, hp: 10, maxHp: 10, radius: 30, shield: true },
+                    { type: 'drone', relX: 0.65, relY: 0.2, hp: 1, maxHp: 1, radius: 12, orbit: true, orbitCenter: 0, orbitRadius: 220, orbitSpeed: 0.025, angle: 0 },
+                    { type: 'drone', relX: 0.65, relY: 0.8, hp: 1, maxHp: 1, radius: 12, orbit: true, orbitCenter: 0, orbitRadius: 220, orbitSpeed: 0.025, angle: Math.PI },
+                    { type: 'drone', relX: 0.35, relY: 0.5, hp: 1, maxHp: 1, radius: 12, orbit: true, orbitCenter: 0, orbitRadius: 180, orbitSpeed: -0.02, angle: 1.5 },
+                    { type: 'barrel', relX: 0.75, relY: 0.4, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'barrel', relX: 0.75, relY: 0.6, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'barrel', relX: 0.65, relY: 0.5, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'asteroid', relX: 0.7, relY: 0.3, hp: 3, maxHp: 3, radius: 18 },
+                    { type: 'asteroid', relX: 0.7, relY: 0.7, hp: 3, maxHp: 3, radius: 18 },
+                    { type: 'cruiser', relX: 0.88, relY: 0.3, hp: 4, maxHp: 4, radius: 22 },
+                    { type: 'cruiser', relX: 0.88, relY: 0.7, hp: 4, maxHp: 4, radius: 22 },
+                    { type: 'turret', relX: 0.8, relY: 0.15, hp: 1, maxHp: 1, radius: 14 },
+                    { type: 'turret', relX: 0.8, relY: 0.85, hp: 1, maxHp: 1, radius: 14 },
+                    { type: 'turret', relX: 0.9, relY: 0.5, hp: 2, maxHp: 2, radius: 14 }
+                ]
+            },
+            {
+                name: "Level 4: 三体混沌陷阱",
+                ammo: 13,
+                bodies: [
+                    { x: 0.35, y: 0.3, radius: 35, mass: 1500, color: '#10b981', type: 'planet', name: '三体 Alpha' },
+                    { x: 0.65, y: 0.35, radius: 32, mass: 1400, color: '#3b82f6', type: 'planet', name: '三体 Beta' },
+                    { x: 0.5, y: 0.75, radius: 38, mass: 1700, color: '#f43f5e', type: 'planet', name: '三体 Gamma' }
+                ],
+                targets: [
+                    { type: 'drone', relX: 0.45, relY: 0.25, hp: 1, maxHp: 1, radius: 12 },
+                    { type: 'drone', relX: 0.75, relY: 0.3, hp: 1, maxHp: 1, radius: 12 },
+                    { type: 'drone', relX: 0.55, relY: 0.8, hp: 1, maxHp: 1, radius: 12 },
+                    { type: 'turret', relX: 0.8, relY: 0.15, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'turret', relX: 0.8, relY: 0.5, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'turret', relX: 0.8, relY: 0.85, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'barrel', relX: 0.7, relY: 0.5, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'barrel', relX: 0.6, relY: 0.6, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'asteroid', relX: 0.4, relY: 0.5, hp: 2, maxHp: 2, radius: 15 },
+                    { type: 'asteroid', relX: 0.6, relY: 0.2, hp: 2, maxHp: 2, radius: 15 },
+                    { type: 'asteroid', relX: 0.7, relY: 0.7, hp: 2, maxHp: 2, radius: 15 },
+                    { type: 'cruiser', relX: 0.85, relY: 0.35, hp: 4, maxHp: 4, radius: 22, shield: true },
+                    { type: 'cruiser', relX: 0.85, relY: 0.65, hp: 4, maxHp: 4, radius: 22, shield: true },
+                    { type: 'dreadnought', relX: 0.9, relY: 0.5, hp: 12, maxHp: 12, radius: 30, shield: true },
+                    { type: 'turret', relX: 0.92, relY: 0.2, hp: 1, maxHp: 1, radius: 14 }
+                ]
+            },
+            {
+                name: "Level 5: 白洞排斥要塞",
+                ammo: 12,
+                bodies: [
+                    { x: 0.55, y: 0.5, radius: 32, mass: -2500, color: '#e0f2fe', type: 'whitehole', name: '斥力白洞 WH-9' }
+                ],
+                targets: [
+                    { type: 'dreadnought', relX: 0.88, relY: 0.5, hp: 12, maxHp: 12, radius: 32, shield: true },
+                    { type: 'cruiser', relX: 0.75, relY: 0.3, hp: 4, maxHp: 4, radius: 22 },
+                    { type: 'cruiser', relX: 0.75, relY: 0.7, hp: 4, maxHp: 4, radius: 22 },
+                    { type: 'drone', relX: 0.65, relY: 0.2, hp: 1, maxHp: 1, radius: 12 },
+                    { type: 'drone', relX: 0.65, relY: 0.8, hp: 1, maxHp: 1, radius: 12 },
+                    { type: 'drone', relX: 0.7, relY: 0.5, hp: 1, maxHp: 1, radius: 12 },
+                    { type: 'turret', relX: 0.82, relY: 0.15, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'turret', relX: 0.82, relY: 0.85, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'barrel', relX: 0.8, relY: 0.4, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'barrel', relX: 0.8, relY: 0.6, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'asteroid', relX: 0.6, relY: 0.4, hp: 3, maxHp: 3, radius: 16 },
+                    { type: 'asteroid', relX: 0.6, relY: 0.6, hp: 3, maxHp: 3, radius: 16 },
+                    { type: 'asteroid', relX: 0.78, relY: 0.5, hp: 3, maxHp: 3, radius: 16 },
+                    { type: 'turret', relX: 0.92, relY: 0.35, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'turret', relX: 0.92, relY: 0.65, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'drone', relX: 0.85, relY: 0.2, hp: 1, maxHp: 1, radius: 12 }
+                ]
+            },
+            {
+                name: "Level 6: 小行星阵列要塞",
+                ammo: 14,
+                bodies: [
+                    { x: 0.4, y: 0.4, radius: 42, mass: 2000, color: '#6366f1', type: 'planet', name: '冷翠重极星' },
+                    { x: 0.65, y: 0.65, radius: 36, mass: 1800, color: '#8b5cf6', type: 'planet', name: '暗影次星' }
+                ],
+                targets: [
+                    { type: 'dreadnought', relX: 0.85, relY: 0.3, hp: 10, maxHp: 10, radius: 28, shield: true },
+                    { type: 'dreadnought', relX: 0.85, relY: 0.7, hp: 10, maxHp: 10, radius: 28, shield: true },
+                    { type: 'asteroid', relX: 0.55, relY: 0.2, hp: 3, maxHp: 3, radius: 15 },
+                    { type: 'asteroid', relX: 0.55, relY: 0.4, hp: 3, maxHp: 3, radius: 15 },
+                    { type: 'asteroid', relX: 0.55, relY: 0.6, hp: 3, maxHp: 3, radius: 15 },
+                    { type: 'asteroid', relX: 0.55, relY: 0.8, hp: 3, maxHp: 3, radius: 15 },
+                    { type: 'barrel', relX: 0.75, relY: 0.3, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'barrel', relX: 0.75, relY: 0.7, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'barrel', relX: 0.7, relY: 0.5, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'drone', relX: 0.5, relY: 0.25, hp: 1, maxHp: 1, radius: 12, orbit: true, orbitCenter: 0, orbitRadius: 150, orbitSpeed: 0.02, angle: 0 },
+                    { type: 'drone', relX: 0.75, relY: 0.5, hp: 1, maxHp: 1, radius: 12, orbit: true, orbitCenter: 1, orbitRadius: 140, orbitSpeed: -0.02, angle: 2 },
+                    { type: 'cruiser', relX: 0.78, relY: 0.2, hp: 4, maxHp: 4, radius: 22 },
+                    { type: 'cruiser', relX: 0.78, relY: 0.8, hp: 4, maxHp: 4, radius: 22 },
+                    { type: 'turret', relX: 0.9, relY: 0.15, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'turret', relX: 0.9, relY: 0.5, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'turret', relX: 0.9, relY: 0.85, hp: 2, maxHp: 2, radius: 14 }
+                ]
+            },
+            {
+                name: "Level 7: 终极轨道星盟舰队",
+                ammo: 16,
+                bodies: [
+                    { x: 0.35, y: 0.5, radius: 48, mass: 2800, color: '#06b6d4', type: 'planet', name: '主恒星 泰坦' },
+                    { x: 0.65, y: 0.3, radius: 22, mass: 4000, color: '#d946ef', type: 'blackhole', name: '伴生黑洞' },
+                    { x: 0.65, y: 0.7, radius: 30, mass: -2000, color: '#fef08a', type: 'whitehole', name: '反物质白洞' }
+                ],
+                targets: [
+                    { type: 'dreadnought', relX: 0.88, relY: 0.35, hp: 15, maxHp: 15, radius: 32, shield: true, name: '星盟主舰 Alpha' },
+                    { type: 'dreadnought', relX: 0.88, relY: 0.65, hp: 15, maxHp: 15, radius: 32, shield: true, name: '星盟主舰 Beta' },
+                    { type: 'cruiser', relX: 0.78, relY: 0.2, hp: 5, maxHp: 5, radius: 22, shield: true },
+                    { type: 'cruiser', relX: 0.78, relY: 0.5, hp: 5, maxHp: 5, radius: 22, shield: true },
+                    { type: 'cruiser', relX: 0.78, relY: 0.8, hp: 5, maxHp: 5, radius: 22, shield: true },
+                    { type: 'drone', relX: 0.5, relY: 0.3, hp: 1, maxHp: 1, radius: 12, orbit: true, orbitCenter: 0, orbitRadius: 180, orbitSpeed: 0.025, angle: 0 },
+                    { type: 'drone', relX: 0.5, relY: 0.7, hp: 1, maxHp: 1, radius: 12, orbit: true, orbitCenter: 0, orbitRadius: 180, orbitSpeed: 0.025, angle: Math.PI },
+                    { type: 'turret', relX: 0.72, relY: 0.35, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'turret', relX: 0.72, relY: 0.65, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'barrel', relX: 0.82, relY: 0.35, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'barrel', relX: 0.82, relY: 0.65, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'asteroid', relX: 0.48, relY: 0.5, hp: 3, maxHp: 3, radius: 16 },
+                    { type: 'asteroid', relX: 0.6, relY: 0.5, hp: 3, maxHp: 3, radius: 16 },
+                    { type: 'turret', relX: 0.94, relY: 0.2, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'turret', relX: 0.94, relY: 0.5, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'turret', relX: 0.94, relY: 0.8, hp: 2, maxHp: 2, radius: 14 }
+                ]
+            },
+            {
+                name: "Level 8: 自由沙盒演习场",
+                ammo: 99,
+                bodies: [
+                    { x: 0.5, y: 0.5, radius: 50, mass: 2500, color: '#38bdf8', type: 'planet', name: '沙盒枢纽星' }
+                ],
+                targets: [
+                    { type: 'dreadnought', relX: 0.85, relY: 0.5, hp: 20, maxHp: 20, radius: 34, shield: true },
+                    { type: 'cruiser', relX: 0.75, relY: 0.3, hp: 5, maxHp: 5, radius: 22 },
+                    { type: 'cruiser', relX: 0.75, relY: 0.7, hp: 5, maxHp: 5, radius: 22 },
+                    { type: 'turret', relX: 0.7, relY: 0.2, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'turret', relX: 0.7, relY: 0.8, hp: 2, maxHp: 2, radius: 14 },
+                    { type: 'barrel', relX: 0.8, relY: 0.4, hp: 1, maxHp: 1, radius: 10 },
+                    { type: 'barrel', relX: 0.8, relY: 0.6, hp: 1, maxHp: 1, radius: 10 }
+                ]
+            }
+        ];
+
+        // --- INIT & LEVEL LOADING ---
+        function loadLevel(idx) {
+            currentLevelIdx = idx;
+            const lvl = LEVELS[idx];
+            ammoCount = lvl.ammo;
+            isGameOver = false;
+            gameTime = 0;
+            activeProjectiles = [];
+            activeSingularities = [];
+            spacePigs = [];
+            particles = [];
+            wormhole = { entrance: null, exit: null, placementMode: false };
+
+            cannon.y = height * 0.75;
+            cannon.x = 100;
+
+            // Load Celestial Bodies
+            celestialBodies = lvl.bodies.map(b => ({
+                x: b.x * width,
+                y: b.y * height,
+                radius: b.radius,
+                mass: b.mass,
+                color: b.color,
+                type: b.type,
+                name: b.name
+            }));
+
+            // Load Targets
+            targets = lvl.targets.map(t => {
+                let x = t.relX * width;
+                let y = t.relY * height;
+                let orbCenter = null;
+                if (t.orbit && t.orbitCenter !== undefined && celestialBodies[t.orbitCenter]) {
+                    orbCenter = celestialBodies[t.orbitCenter];
+                }
+                return {
+                    ...t,
+                    x: x,
+                    y: y,
+                    baseX: x,
+                    baseY: y,
+                    orbCenter: orbCenter,
+                    angle: t.angle || 0,
+                    hp: t.hp,
+                    maxHp: t.maxHp,
+                    alive: true
+                };
+            });
+
+            document.getElementById('levelNameDisplay').innerText = lvl.name;
+            updateHUD();
+            showToast(`已加载 ${lvl.name}`);
+        }
+
+        function updateHUD() {
+            const aliveCount = targets.filter(t => t.alive).length;
+            const totalCount = targets.length;
+            document.getElementById('targetCountDisplay').innerText = `目标: ${aliveCount}/${totalCount}`;
+            document.getElementById('ammoCountBadge').innerText = `备弹: ${ammoCount}`;
+        }
+
+        function showToast(text, duration = 2500) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'glass-panel px-4 py-2 rounded-xl text-xs font-bold text-cyan-300 border border-cyan-500/40 shadow-xl transition-all duration-300 transform translate-y-2 opacity-0';
+            toast.innerText = text;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // --- PHYSICS & RK4 INTEGRATION ---
+        function getGravitationalAcceleration(x, y, massIgnored = 1) {
+            let ax = 0;
+            let ay = 0;
+            const G = 100 * cannon.gFactor; // Normalized G constant
+
+            // Global gravity component
+            ay += globalGravityMode * 120;
+
+            // Celestial bodies gravitational attraction
+            for (let b of celestialBodies) {
+                const dx = b.x - x;
+                const dy = b.y - y;
+                const distSq = dx * dx + dy * dy + 400; // Softening parameter
+                const dist = Math.sqrt(distSq);
+                
+                // Acceleration magnitude = G * M / r^2
+                const f = (G * b.mass) / distSq;
+                ax += f * (dx / dist);
+                ay += f * (dy / dist);
+            }
+
+            // Active Black Hole Singularities attraction
+            for (let s of activeSingularities) {
+                const dx = s.x - x;
+                const dy = s.y - y;
+                const distSq = dx * dx + dy * dy + 200;
+                const dist = Math.sqrt(distSq);
+                const f = (G * 3500) / distSq;
+                ax += f * (dx / dist);
+                ay += f * (dy / dist);
+            }
+
+            return { ax, ay };
+        }
+
+        // RK4 Integrator Step
+        function rk4Step(x, y, vx, vy, dt) {
+            // k1
+            const a1 = getGravitationalAcceleration(x, y);
+            const k1_vx = a1.ax;
+            const k1_vy = a1.ay;
+            const k1_x = vx;
+            const k1_y = vy;
+
+            // k2
+            const x2 = x + 0.5 * dt * k1_x;
+            const y2 = y + 0.5 * dt * k1_y;
+            const a2 = getGravitationalAcceleration(x2, y2);
+            const k2_vx = a2.ax;
+            const k2_vy = a2.ay;
+            const k2_x = vx + 0.5 * dt * k1_vx;
+            const k2_y = vy + 0.5 * dt * k1_vy;
+
+            // k3
+            const x3 = x + 0.5 * dt * k2_x;
+            const y3 = y + 0.5 * dt * k2_y;
+            const a3 = getGravitationalAcceleration(x3, y3);
+            const k3_vx = a3.ax;
+            const k3_vy = a3.ay;
+            const k3_x = vx + 0.5 * dt * k2_vx;
+            const k3_y = vy + 0.5 * dt * k2_vy;
+
+            // k4
+            const x4 = x + dt * k3_x;
+            const y4 = y + dt * k3_y;
+            const a4 = getGravitationalAcceleration(x4, y4);
+            const k4_vx = a4.ax;
+            const k4_vy = a4.ay;
+            const k4_x = vx + dt * k3_vx;
+            const k4_y = vy + dt * k3_vy;
+
+            const newX = x + (dt / 6) * (k1_x + 2 * k2_x + 2 * k3_x + k4_x);
+            const newY = y + (dt / 6) * (k1_y + 2 * k2_y + 2 * k3_y + k4_y);
+            const newVx = vx + (dt / 6) * (k1_vx + 2 * k2_vx + 2 * k3_vx + k4_vx);
+            const newVy = vy + (dt / 6) * (k1_vy + 2 * k2_vy + 2 * k3_vy + k4_vy);
+
+            return { x: newX, y: newY, vx: newVx, vy: newVy };
+        }
+
+        // Calculate Trajectory Prediction Line with Heatmap & Periapsis Marker
+        function computeTrajectoryPrediction() {
+            const rad = (cannon.angle * Math.PI) / 180;
+            let vx = Math.cos(rad) * cannon.power * 4.5;
+            let vy = -Math.sin(rad) * cannon.power * 4.5;
+            let currX = cannon.x;
+            let currY = cannon.y;
+
+            const points = [];
+            const dt = 0.05;
+            let minDistanceToPlanet = Infinity;
+            let periapsisPoint = null;
+            let teleWormholeUsed = false;
+
+            for (let step = 0; step < 260; step++) {
+                // Wormhole teleport in prediction
+                if (wormhole.entrance && wormhole.exit && !teleWormholeUsed) {
+                    const dEnt = Math.hypot(currX - wormhole.entrance.x, currY - wormhole.entrance.y);
+                    if (dEnt < 28) {
+                        currX = wormhole.exit.x;
+                        currY = wormhole.exit.y;
+                        vx *= 1.1;
+                        vy *= 1.1;
+                        teleWormholeUsed = true;
+                    }
+                }
+
+                const next = rk4Step(currX, currY, vx, vy, dt);
+                currX = next.x;
+                currY = next.y;
+                vx = next.vx;
+                vy = next.vy;
+
+                // Accel magnitude for heatmap color
+                const accel = getGravitationalAcceleration(currX, currY);
+                const gMag = Math.hypot(accel.ax, accel.ay);
+
+                points.push({ x: currX, y: currY, gMag: gMag });
+
+                // Periapsis calculation
+                for (let b of celestialBodies) {
+                    const d = Math.hypot(currX - b.x, currY - b.y) - b.radius;
+                    if (d < minDistanceToPlanet) {
+                        minDistanceToPlanet = d;
+                        periapsisPoint = { x: currX, y: currY, dist: d, bodyName: b.name };
+                    }
+                }
+
+                // Break on canvas boundaries
+                if (currX < -100 || currX > width + 100 || currY < -100 || currY > height + 100) break;
+            }
+
+            return { points, periapsis: periapsisPoint };
+        }
+
+        // --- FIRE & AMMO HANDLERS ---
+        function fireCannon() {
+            if (ammoCount <= 0 && currentLevelIdx !== 7) {
+                showToast("⚠️ 备弹耗尽！");
+                return;
+            }
+
+            sounds.init();
+            sounds.playLaunch();
+
+            const rad = (cannon.angle * Math.PI) / 180;
+            const speed = cannon.power * 4.5;
+            const vx = Math.cos(rad) * speed;
+            const vy = -Math.sin(rad) * speed;
+
+            const proj = {
+                id: Math.random(),
+                type: currentAmmoType,
+                x: cannon.x,
+                y: cannon.y,
+                vx: vx,
+                vy: vy,
+                mass: cannon.mass,
+                radius: currentAmmoType === 'beam' ? 6 : 8,
+                active: true,
+                life: 0,
+                boostTimer: 0, // Inertial boost timer
+                boostUsed: false,
+                isCrit: false,
+                trail: []
+            };
+
+            activeProjectiles.push(proj);
+            
+            if (currentLevelIdx !== 7) {
+                ammoCount--;
+            }
+            updateHUD();
+            showToast(`🚀 已发射: ${getAmmoName(currentAmmoType)}`);
+        }
+
+        function getAmmoName(type) {
+            switch(type) {
+                case 'kinetic': return '💥 动能弹';
+                case 'cluster': return '✨ 集束分裂弹';
+                case 'blackhole': return '🌀 奇点黑洞弹';
+                case 'emp': return '⚡ 脉冲电磁弹';
+                case 'beam': return '📉 极光量子穿透激光';
+            }
+        }
+
+        // ⚡ REQUIREMENT 2: MANUAL TANGENTIAL ACCELERATION BURST
+        function triggerTangentialBurst() {
+            const proj = activeProjectiles.find(p => p.active);
+            if (!proj) {
+                showToast("⚠️ 暂无飞行中的弹头！");
+                return;
+            }
+            if (proj.boostUsed) {
+                showToast("⚠️ 当前弹头已使用过切线加速！");
+                return;
+            }
+
+            sounds.init();
+            sounds.playBurst();
+
+            // Tangent speed calculation
+            const speed = Math.hypot(proj.vx, proj.vy);
+            if (speed > 0.001) {
+                const dirX = proj.vx / speed;
+                const dirY = proj.vy / speed;
+                const newSpeed = speed * 1.85; // 1.85x boost
+
+                proj.vx = dirX * newSpeed;
+                proj.vy = dirY * newSpeed;
+                proj.boostTimer = 0.45; // 0.45s gravity-free inertial dash
+                proj.boostUsed = true;
+                proj.isCrit = true; // Kinetic Crit Bonus
+
+                // Sonic Boom shockwave ring
+                for (let i = 0; i < 24; i++) {
+                    const angle = (Math.PI * 2 * i) / 24;
+                    particles.push({
+                        x: proj.x,
+                        y: proj.y,
+                        vx: Math.cos(angle) * 120 + proj.vx * 0.2,
+                        vy: Math.sin(angle) * 120 + proj.vy * 0.2,
+                        color: i % 2 === 0 ? '#38bdf8' : '#fbbf24',
+                        radius: Math.random() * 3 + 2,
+                        life: 0.4,
+                        maxLife: 0.4
+                    });
+                }
+
+                showToast("⚡ 切线加速爆发！惯性冲刺中 (+85% 速度 | 暴击加成)");
+            }
+        }
+
+        // 💥 REQUIREMENT 3: FIXED SINGULARITY BLACK HOLE BOMB + SPACE FLYING PIGS
+        function triggerDetonateOrSkill() {
+            const proj = activeProjectiles.find(p => p.active);
+            if (!proj) {
+                showToast("⚠️ 暂无飞行中的弹头！");
+                return;
+            }
+
+            if (proj.type === 'blackhole') {
+                detonateBlackHole(proj);
+            } else if (proj.type === 'cluster') {
+                splitClusterAmmo(proj);
+            } else {
+                // Normal early detonation
+                createExplosion(proj.x, proj.y, 60, 35);
+                proj.active = false;
+                showToast("💥 弹头已手动引爆！");
+            }
+        }
+
+        function detonateBlackHole(proj) {
+            proj.active = false;
+            sounds.init();
+            sounds.playExplosion(true);
+
+            // Halt in place instantly
+            const singX = proj.x;
+            const singY = proj.y;
+
+            // Spawn stationary singularity anchor (2.6s duration)
+            const singularity = {
+                x: singX,
+                y: singY,
+                radius: 45,
+                duration: 2.6,
+                maxDuration: 2.6
+            };
+            activeSingularities.push(singularity);
+
+            showToast("🌀 奇点黑洞锚定！太空飞猪小队出击！");
+
+            // REQUIREMENT 3: SPAWN 6 CANVAS-DRAWN SPACE FLYING PIGS
+            // Find 2 nearest living enemies
+            const livingEnemies = targets.filter(t => t.alive).sort((a, b) => {
+                const dA = Math.hypot(a.x - singX, a.y - singY);
+                const dB = Math.hypot(b.x - singX, b.y - singY);
+                return dA - dB;
+            });
+
+            let target1 = livingEnemies[0] || null;
+            let target2 = livingEnemies[1] || target1;
+
+            for (let i = 0; i < 6; i++) {
+                const assignedTarget = (i < 3) ? target1 : target2;
+                const angle = (Math.PI * 2 * i) / 6;
+                const spreadSpeed = 120 + Math.random() * 40;
+
+                spacePigs.push({
+                    x: singX + Math.cos(angle) * 15,
+                    y: singY + Math.sin(angle) * 15,
+                    vx: Math.cos(angle) * spreadSpeed,
+                    vy: Math.sin(angle) * spreadSpeed,
+                    target: assignedTarget,
+                    wingAngle: 0,
+                    life: 3.5, // 3.5s lifetime
+                    maxLife: 3.5
+                });
+            }
+            sounds.playPigSqueak();
+        }
+
+        function splitClusterAmmo(proj) {
+            proj.active = false;
+            sounds.playExplosion(false);
+            const count = 7;
+            const baseAngle = Math.atan2(proj.vy, proj.vx);
+            const speed = Math.hypot(proj.vx, proj.vy) * 0.9;
+
+            for (let i = 0; i < count; i++) {
+                const spreadAngle = baseAngle + (i - (count - 1) / 2) * 0.25;
+                activeProjectiles.push({
+                    id: Math.random(),
+                    type: 'kinetic',
+                    x: proj.x,
+                    y: proj.y,
+                    vx: Math.cos(spreadAngle) * speed,
+                    vy: Math.sin(spreadAngle) * speed,
+                    mass: 3,
+                    radius: 5,
+                    active: true,
+                    life: 0,
+                    boostTimer: 0,
+                    boostUsed: true,
+                    isCrit: false,
+                    trail: []
+                });
+            }
+            showToast("✨ 集束弹头分裂成功！");
+        }
+
+        // 🌀 REQUIREMENT 4: WORMHOLE PORTAL SYSTEM + BONUS AMMO REWARD
+        function toggleWormholePlacement() {
+            wormhole.placementMode = !wormhole.placementMode;
+            if (wormhole.placementMode) {
+                showToast("🌀 虫洞模式激活：请在战场任意位置点击放置【虫洞出口】");
+            } else {
+                showToast("已取消虫洞放置");
+            }
+        }
+
+        function placeWormholeExit(x, y) {
+            wormhole.exit = { x: x, y: y };
+
+            // Step 2: Auto Reachable Entrance placement near player firing arc
+            const rad = (cannon.angle * Math.PI) / 180;
+            const dist = 180 + Math.random() * 40;
+            const entX = cannon.x + Math.cos(rad) * dist;
+            const entY = cannon.y - Math.sin(rad) * dist + (Math.random() * 40 - 20);
+
+            wormhole.entrance = { x: entX, y: entY };
+            wormhole.placementMode = false;
+
+            // BONUS AMMO REWARD
+            ammoCount += 1;
+            updateHUD();
+
+            sounds.init();
+            sounds.playWormhole();
+            showToast("🌀 虫洞成功建立！+1 奖励备弹已放入储量！", 3500);
+
+            // Entrance particle pulse
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    x: entX, y: entY,
+                    vx: (Math.random() - 0.5) * 80,
+                    vy: (Math.random() - 0.5) * 80,
+                    color: '#38bdf8', radius: 3, life: 0.5, maxLife: 0.5
+                });
+            }
+        }
+
+        // --- EXPLOSIONS & DAMAGE DEALING ---
+        function createExplosion(x, y, radius = 50, baseDamage = 30) {
+            sounds.playExplosion(radius > 55);
+
+            // Visual Particles
+            for (let i = 0; i < 30; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const spd = Math.random() * 160 + 20;
+                particles.push({
+                    x: x, y: y,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd,
+                    color: i % 3 === 0 ? '#ef4444' : (i % 3 === 1 ? '#f59e0b' : '#fef08a'),
+                    radius: Math.random() * 4 + 2,
+                    life: 0.5 + Math.random() * 0.3,
+                    maxLife: 0.8
+                });
+            }
+
+            // Damage Targets
+            for (let t of targets) {
+                if (!t.alive) continue;
+                const dist = Math.hypot(t.x - x, t.y - y);
+                if (dist < radius + t.radius) {
+                    const dmg = Math.ceil(baseDamage * (1 - dist / (radius + t.radius + 20)));
+                    damageTarget(t, Math.max(1, dmg));
+                }
+            }
+        }
+
+        function damageTarget(t, amount) {
+            if (t.shield) {
+                t.shield = false; // Break shield first
+                showToast("🛡️ 敌舰护盾已被摧毁！");
+                sounds.playExplosion(false);
+                return;
+            }
+
+            t.hp -= amount;
+            if (t.hp <= 0) {
+                t.alive = false;
+                score += (t.maxHp * 150) + (combo * 50);
+                combo++;
+                showToast(`🎯 目标摧毁! +${t.maxHp * 150} pts (Combo x${combo})`);
+
+                // Chain reaction for anti-matter barrels
+                if (t.type === 'barrel') {
+                    createExplosion(t.x, t.y, 110, 80);
+                } else {
+                    createExplosion(t.x, t.y, 45, 20);
+                }
+
+                updateHUD();
+                checkVictoryCondition();
+            }
+        }
+
+        function checkVictoryCondition() {
+            const aliveCount = targets.filter(t => t.alive).length;
+            if (aliveCount === 0 && !isGameOver) {
+                isGameOver = true;
+                const ammoBonus = ammoCount * 200;
+                score += ammoBonus;
+                
+                setTimeout(() => {
+                    document.getElementById('modalTitle').innerText = "任务完成 MISSION ACCOMPLISHED";
+                    document.getElementById('modalIcon').innerText = "🏆";
+                    document.getElementById('modalScore').innerText = score;
+                    document.getElementById('modalAmmoBonus').innerText = `+${ammoBonus}`;
+                    document.getElementById('resultModal').classList.remove('hidden');
+                }, 1000);
+            }
+        }
+
+        // --- MAIN UPDATE LOOP ---
+        let lastTime = performance.now();
+        function update(dt) {
+            gameTime += dt;
+            document.getElementById('metDisplay').innerText = `MET: ${Math.floor(gameTime/60).toString().padStart(2,'0')}:${(gameTime%60).toFixed(1).padStart(4,'0')}`;
+
+            // Update Orbiting Drones
+            for (let t of targets) {
+                if (t.alive && t.orbit && t.orbCenter) {
+                    t.angle += t.orbitSpeed;
+                    t.x = t.orbCenter.x + Math.cos(t.angle) * t.orbitRadius;
+                    t.y = t.orbCenter.y + Math.sin(t.angle) * t.orbitRadius;
+                }
+            }
+
+            // Update Active Singularities
+            for (let i = activeSingularities.length - 1; i >= 0; i--) {
+                const s = activeSingularities[i];
+                s.duration -= dt;
+
+                // Pull nearby targets
+                for (let t of targets) {
+                    if (!t.alive) continue;
+                    const dx = s.x - t.x;
+                    const dy = s.y - t.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < 220 && dist > 5) {
+                        t.x += (dx / dist) * 80 * dt;
+                        t.y += (dy / dist) * 80 * dt;
+                    }
+                }
+
+                if (s.duration <= 0) {
+                    activeSingularities.splice(i, 1);
+                }
+            }
+
+            // Update Space Flying Pigs
+            for (let i = spacePigs.length - 1; i >= 0; i--) {
+                const pig = spacePigs[i];
+                pig.life -= dt;
+                pig.wingAngle += 15 * dt;
+
+                // Homing Steering
+                if (pig.target && pig.target.alive) {
+                    const dx = pig.target.x - pig.x;
+                    const dy = pig.target.y - pig.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist > 5) {
+                        pig.vx += (dx / dist) * 450 * dt;
+                        pig.vy += (dy / dist) * 450 * dt;
+                    }
+                } else {
+                    // Find new living target if current target dead
+                    const alive = targets.filter(t => t.alive);
+                    if (alive.length > 0) pig.target = alive[0];
+                }
+
+                // Speed cap
+                const speed = Math.hypot(pig.vx, pig.vy);
+                if (speed > 350) {
+                    pig.vx = (pig.vx / speed) * 350;
+                    pig.vy = (pig.vy / speed) * 350;
+                }
+
+                pig.x += pig.vx * dt;
+                pig.y += pig.vy * dt;
+
+                // Collision check with target
+                if (pig.target && pig.target.alive) {
+                    const dist = Math.hypot(pig.target.x - pig.x, pig.target.y - pig.y);
+                    if (dist < pig.target.radius + 14) {
+                        createExplosion(pig.x, pig.y, 50, 40);
+                        sounds.playPigSqueak();
+                        spacePigs.splice(i, 1);
+                        continue;
+                    }
+                }
+
+                if (pig.life <= 0) {
+                    createExplosion(pig.x, pig.y, 35, 20);
+                    spacePigs.splice(i, 1);
+                }
+            }
+
+            // Update Active Projectiles (RK4 Integration)
+            for (let i = activeProjectiles.length - 1; i >= 0; i--) {
+                const proj = activeProjectiles[i];
+                if (!proj.active) continue;
+
+                proj.life += dt;
+                proj.trail.push({ x: proj.x, y: proj.y });
+                if (proj.trail.length > 35) proj.trail.shift();
+
+                // Check wormhole teleportation
+                if (wormhole.entrance && wormhole.exit) {
+                    const dEnt = Math.hypot(proj.x - wormhole.entrance.x, proj.y - wormhole.entrance.y);
+                    if (dEnt < 28) {
+                        proj.x = wormhole.exit.x;
+                        proj.y = wormhole.exit.y;
+                        proj.vx *= 1.1; // 1.1x slingshot boost
+                        proj.vy *= 1.1;
+                        sounds.playWormhole();
+                        showToast("🌀 穿越虫洞！获得 +10% 穿透重力弹射速度！");
+                    }
+                }
+
+                // Inertial Boost Timer handling
+                if (proj.boostTimer > 0) {
+                    proj.boostTimer -= dt;
+                    proj.x += proj.vx * dt;
+                    proj.y += proj.vy * dt;
+                } else {
+                    // RK4 Integration step
+                    const next = rk4Step(proj.x, proj.y, proj.vx, proj.vy, dt);
+                    proj.x = next.x;
+                    proj.y = next.y;
+                    proj.vx = next.vx;
+                    proj.vy = next.vy;
+                }
+
+                // Collisions with Celestial Bodies
+                for (let b of celestialBodies) {
+                    const dist = Math.hypot(proj.x - b.x, proj.y - b.y);
+                    if (dist < b.radius + proj.radius) {
+                        createExplosion(proj.x, proj.y, 45, 10);
+                        proj.active = false;
+                        showToast(`💥 弹头撞击天体 [${b.name}] 毁接！`);
+                        break;
+                    }
+                }
+
+                // Collisions with Targets
+                if (proj.active) {
+                    for (let t of targets) {
+                        if (!t.alive) continue;
+                        const dist = Math.hypot(proj.x - t.x, proj.y - t.y);
+                        if (dist < t.radius + proj.radius) {
+                            let dmg = 35;
+                            if (proj.type === 'beam') dmg = 65;
+                            if (proj.isCrit) dmg *= 1.8; // Crit Bonus
+
+                            damageTarget(t, Math.ceil(dmg));
+
+                            if (proj.type !== 'beam') {
+                                proj.active = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Canvas boundaries removal
+                if (proj.x < -200 || proj.x > width + 200 || proj.y < -200 || proj.y > height + 200 || proj.life > 12) {
+                    proj.active = false;
+                }
+            }
+
+            // Remove inactive projectiles
+            activeProjectiles = activeProjectiles.filter(p => p.active);
+
+            // Update Telemetry Panel Display
+            updateTelemetryUI();
+        }
+
+        // REQUIREMENT 5: REAL-TIME TELEMETRY HUD PANEL
+        function updateTelemetryUI() {
+            const activeProj = activeProjectiles[0];
+            const boostStatusEl = document.getElementById('boostStatus');
+
+            if (!activeProj) {
+                document.getElementById('telemetrySpeed').innerText = '0.00 m/s';
+                document.getElementById('telemetryVxy').innerText = '0.0, 0.0';
+                document.getElementById('telemetryAccel').innerText = '0.00 G';
+                document.getElementById('telemetryEk').innerText = '0.00 MJ';
+                document.getElementById('telemetryDominant').innerText = '无 (深空)';
+                document.getElementById('telemetryAlt').innerText = '-- km';
+                document.getElementById('telemetryPe').innerText = '-- km';
+                boostStatusEl.innerText = '切线加速: 就绪';
+                boostStatusEl.className = 'text-emerald-400 font-semibold';
+                return;
+            }
+
+            const spd = Math.hypot(activeProj.vx, activeProj.vy);
+            const accel = getGravitationalAcceleration(activeProj.x, activeProj.y);
+            const gMag = Math.hypot(accel.ax, accel.ay) / 100;
+            const ek = 0.5 * activeProj.mass * spd * spd / 1000;
+
+            document.getElementById('telemetrySpeed').innerText = `${spd.toFixed(1)} m/s`;
+            document.getElementById('telemetryVxy').innerText = `${activeProj.vx.toFixed(0)}, ${activeProj.vy.toFixed(0)}`;
+            document.getElementById('telemetryAccel').innerText = `${gMag.toFixed(2)} G`;
+            document.getElementById('telemetryEk').innerText = `${ek.toFixed(2)} MJ`;
+
+            // Dominant Celestial Body & Altitude
+            let minDistance = Infinity;
+            let dominantBody = null;
+            for (let b of celestialBodies) {
+                const d = Math.hypot(activeProj.x - b.x, activeProj.y - b.y);
+                if (d < minDistance) {
+                    minDistance = d;
+                    dominantBody = b;
+                }
+            }
+
+            if (dominantBody) {
+                const alt = Math.max(0, minDistance - dominantBody.radius);
+                document.getElementById('telemetryDominant').innerText = dominantBody.name;
+                document.getElementById('telemetryAlt').innerText = `${alt.toFixed(0)} km`;
+            }
+
+            if (activeProj.boostUsed) {
+                boostStatusEl.innerText = '切线加速: 已消耗';
+                boostStatusEl.className = 'text-slate-500 font-semibold';
+            } else {
+                boostStatusEl.innerText = '切线加速: 就绪 [E/右键]';
+                boostStatusEl.className = 'text-amber-400 font-semibold animate-pulse';
+            }
+        }
+
+        // --- RENDERING CANVAS ENGINE ---
+        function render() {
+            ctx.clearRect(0, 0, width, height);
+
+            // 1. Warped Spacetime Grid Background
+            if (isGridEnabled) {
+                drawWarpedGrid();
+            }
+
+            // 2. Celestial Gravitational Bodies
+            drawCelestialBodies();
+
+            // 3. Wormhole Portals
+            drawWormholes();
+
+            // 4. Trajectory RK4 Prediction Line + Periapsis Marker
+            if (activeProjectiles.length === 0) {
+                drawTrajectoryPrediction();
+            }
+
+            // 5. Active Singularity Black Hole Anchors
+            drawSingularities();
+
+            // 6. Space Flying Pigs
+            drawSpacePigs();
+
+            // 7. Enemy Targets
+            drawTargets();
+
+            // 8. Active Projectiles + Vector Arrows + Gravitational Tethers
+            drawProjectiles();
+
+            // 9. Explosion Particles
+            drawParticles();
+
+            // 10. Player Cannon Cannon Tower & Slingshot Drag UI
+            drawCannon();
+        }
+
+        function drawWarpedGrid() {
+            const step = 45;
+            ctx.lineWidth = 1;
+
+            for (let x = 0; x < width; x += step) {
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+                for (let y = 0; y < height; y += 15) {
+                    let warpX = x;
+                    let warpY = y;
+
+                    // Distort grid near massive celestial bodies
+                    for (let b of celestialBodies) {
+                        const dx = b.x - x;
+                        const dy = b.y - y;
+                        const dist = Math.hypot(dx, dy);
+                        if (dist < 220) {
+                            const factor = (220 - dist) / 220;
+                            const pull = (b.mass / 2000) * factor * 22;
+                            warpX += (dx / dist) * pull;
+                            warpY += (dy / dist) * pull;
+                        }
+                    }
+
+                    if (y === 0) ctx.moveTo(warpX, warpY);
+                    else ctx.lineTo(warpX, warpY);
+                }
+                ctx.stroke();
+            }
+        }
+
+        function drawCelestialBodies() {
+            for (let b of celestialBodies) {
+                ctx.save();
+
+                // Glow ring / Gravity field SOI
+                const glowGradient = ctx.createRadialGradient(b.x, b.y, b.radius * 0.8, b.x, b.y, b.radius * 2.2);
+                glowGradient.addColorStop(0, b.color);
+                glowGradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = glowGradient;
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius * 2.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Main body circle
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                ctx.fillStyle = b.color;
+                ctx.shadowColor = b.color;
+                ctx.shadowBlur = 15;
+                ctx.fill();
+
+                // Celestial Body Label
+                ctx.font = 'bold 11px "Noto Sans SC"';
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.fillText(b.name, b.x, b.y + b.radius + 16);
+
+                ctx.restore();
+            }
+        }
+
+        function drawWormholes() {
+            if (wormhole.entrance) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(wormhole.entrance.x, wormhole.entrance.y, 24, 0, Math.PI * 2);
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#38bdf8';
+                ctx.shadowBlur = 15;
+                ctx.stroke();
+
+                ctx.font = 'bold 10px "Orbitron"';
+                ctx.fillStyle = '#38bdf8';
+                ctx.textAlign = 'center';
+                ctx.fillText("🌀 虫洞入口 ENTRANCE", wormhole.entrance.x, wormhole.entrance.y - 30);
+                ctx.restore();
+            }
+
+            if (wormhole.exit) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(wormhole.exit.x, wormhole.exit.y, 24, 0, Math.PI * 2);
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#fbbf24';
+                ctx.shadowBlur = 15;
+                ctx.stroke();
+
+                ctx.font = 'bold 10px "Orbitron"';
+                ctx.fillStyle = '#fbbf24';
+                ctx.textAlign = 'center';
+                ctx.fillText("🌀 虫洞出口 EXIT", wormhole.exit.x, wormhole.exit.y - 30);
+                ctx.restore();
+            }
+        }
+
+        function drawTrajectoryPrediction() {
+            const pred = computeTrajectoryPrediction();
+            if (pred.points.length < 2) return;
+
+            ctx.save();
+            ctx.lineWidth = 2;
+
+            for (let i = 0; i < pred.points.length - 1; i++) {
+                const p1 = pred.points[i];
+                const p2 = pred.points[i + 1];
+
+                // Dynamic Heatmap Gradient based on Gravity Strength
+                const colorRatio = Math.min(1, p1.gMag / 150);
+                const r = Math.floor(56 + colorRatio * 199);
+                const g = Math.floor(189 - colorRatio * 100);
+                const b = Math.floor(248 - colorRatio * 180);
+
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${0.8 - (i / pred.points.length) * 0.6})`;
+                ctx.setLineDash([6, 4]);
+                ctx.stroke();
+            }
+
+            // Draw Periapsis Marker
+            if (pred.periapsis) {
+                const pe = pred.periapsis;
+                ctx.beginPath();
+                ctx.arc(pe.x, pe.y, 7, 0, Math.PI * 2);
+                ctx.strokeStyle = '#f43f5e';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([]);
+                ctx.stroke();
+
+                ctx.font = 'bold 10px font-mono';
+                ctx.fillStyle = '#fda4af';
+                ctx.fillText(`Pe: ${pe.dist.toFixed(0)}km`, pe.x + 12, pe.y + 4);
+            }
+
+            ctx.restore();
+        }
+
+        function drawSingularities() {
+            for (let s of activeSingularities) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(147, 51, 234, 0.4)';
+                ctx.fill();
+
+                // Swirling vortex effect
+                ctx.strokeStyle = '#c084fc';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius * (0.3 + 0.7 * (s.duration / s.maxDuration)), 0, Math.PI * 1.5);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // REQUIREMENT 3: DETAILED CANVAS-DRAWN SPACE FLYING PIGS
+        function drawSpacePigs() {
+            for (let pig of spacePigs) {
+                ctx.save();
+                ctx.translate(pig.x, pig.y);
+                const angle = Math.atan2(pig.vy, pig.vx);
+                ctx.rotate(angle);
+
+                // 1. Thruster Tail Flame
+                ctx.fillStyle = '#ff9800';
+                ctx.beginPath();
+                ctx.moveTo(-12, 0);
+                ctx.lineTo(-20, -5 + Math.sin(pig.wingAngle) * 3);
+                ctx.lineTo(-20, 5 - Math.sin(pig.wingAngle) * 3);
+                ctx.closePath();
+                ctx.fill();
+
+                // 2. Flapping Angel/Jet Wings
+                ctx.fillStyle = '#e0f2fe';
+                const wingOffset = Math.sin(pig.wingAngle) * 6;
+                // Top Wing
+                ctx.beginPath();
+                ctx.moveTo(-2, -6);
+                ctx.lineTo(-6, -18 + wingOffset);
+                ctx.lineTo(6, -8);
+                ctx.closePath();
+                ctx.fill();
+                // Bottom Wing
+                ctx.beginPath();
+                ctx.moveTo(-2, 6);
+                ctx.lineTo(-6, 18 - wingOffset);
+                ctx.lineTo(6, 8);
+                ctx.closePath();
+                ctx.fill();
+
+                // 3. Cute Pink Pig Body
+                ctx.fillStyle = '#f472b6'; // Pink
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 13, 10, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#db2777';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // 4. Snout
+                ctx.fillStyle = '#f43f5e';
+                ctx.beginPath();
+                ctx.ellipse(10, 0, 4, 3.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#881337'; // Nostrils
+                ctx.fillRect(10, -1.5, 1.5, 1.5);
+                ctx.fillRect(10, 0.5, 1.5, 1.5);
+
+                // 5. Cute Goggles / Eyes
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath();
+                ctx.arc(4, -3, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        function drawTargets() {
+            for (let t of targets) {
+                if (!t.alive) continue;
+                ctx.save();
+                ctx.translate(t.x, t.y);
+
+                if (t.type === 'dreadnought') {
+                    // Multi-HP Boss Ship
+                    ctx.fillStyle = '#1e1b4b';
+                    ctx.strokeStyle = '#818cf8';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.polygon ? ctx.polygon(0, 0, t.radius, 6) : ctx.arc(0, 0, t.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // HP Bar
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillRect(-20, -t.radius - 12, 40, 5);
+                    ctx.fillStyle = '#22c55e';
+                    ctx.fillRect(-20, -t.radius - 12, 40 * (t.hp / t.maxHp), 5);
+                } else if (t.type === 'cruiser') {
+                    ctx.fillStyle = '#312e81';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, t.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#a5b4fc';
+                    ctx.stroke();
+                } else if (t.type === 'barrel') {
+                    ctx.fillStyle = '#dc2626'; // Red Anti-Matter Explosive Barrel
+                    ctx.fillRect(-10, -12, 20, 24);
+                    ctx.fillStyle = '#fef08a';
+                    ctx.font = 'bold 9px Orbitron';
+                    ctx.fillText("☣️", -6, 4);
+                } else {
+                    // Standard Turret / Drone / Asteroid
+                    ctx.fillStyle = t.type === 'drone' ? '#0284c7' : '#475569';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, t.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Shield Energy Overlay
+                if (t.shield) {
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.arc(0, 0, t.radius + 6, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+        }
+
+        // REQUIREMENT 5: REAL-TIME VECTOR ARROWS ON FLYING PROJECTILES
+        function drawProjectiles() {
+            for (let proj of activeProjectiles) {
+                if (!proj.active) continue;
+
+                // Motion Trail
+                ctx.save();
+                if (proj.trail.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(proj.trail[0].x, proj.trail[0].y);
+                    for (let pt of proj.trail) ctx.lineTo(pt.x, pt.y);
+                    ctx.strokeStyle = proj.isCrit ? '#fbbf24' : '#38bdf8';
+                    ctx.lineWidth = proj.radius * 0.8;
+                    ctx.stroke();
+                }
+
+                // Main Projectile Body
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, proj.radius, 0, Math.PI * 2);
+                ctx.fillStyle = proj.isCrit ? '#fbbf24' : '#ffffff';
+                ctx.shadowColor = proj.isCrit ? '#fbbf24' : '#38bdf8';
+                ctx.shadowBlur = 12;
+                ctx.fill();
+
+                // Velocity Vector Arrow V (Cyan)
+                const vScale = 0.2;
+                ctx.beginPath();
+                ctx.moveTo(proj.x, proj.y);
+                ctx.lineTo(proj.x + proj.vx * vScale, proj.y + proj.vy * vScale);
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Gravity Acceleration Vector Arrow Ag (Magenta)
+                const accel = getGravitationalAcceleration(proj.x, proj.y);
+                const aScale = 0.15;
+                ctx.beginPath();
+                ctx.moveTo(proj.x, proj.y);
+                ctx.lineTo(proj.x + accel.ax * aScale, proj.y + accel.ay * aScale);
+                ctx.strokeStyle = '#ec4899';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Dynamic Gravitational Tidal Tether Arc (Inside SOI)
+                for (let b of celestialBodies) {
+                    const dist = Math.hypot(proj.x - b.x, proj.y - b.y);
+                    if (dist < b.radius * 3.5) {
+                        ctx.beginPath();
+                        ctx.moveTo(proj.x, proj.y);
+                        ctx.lineTo(b.x, b.y);
+                        ctx.strokeStyle = 'rgba(217, 70, 239, 0.35)';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([3, 3]);
+                        ctx.stroke();
+                    }
+                }
+
+                ctx.restore();
+            }
+        }
+
+        function drawParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.life -= 0.016;
+                p.x += p.vx * 0.016;
+                p.y += p.vy * 0.016;
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius * (p.life / p.maxLife), 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function drawCannon() {
+            ctx.save();
+            ctx.translate(cannon.x, cannon.y);
+
+            // Base Turret
+            ctx.fillStyle = '#334155';
+            ctx.beginPath();
+            ctx.arc(0, 0, 24, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Cannon Barrel
+            const rad = (cannon.angle * Math.PI) / 180;
+            ctx.rotate(-rad);
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(0, -6, 36, 12);
+
+            ctx.restore();
+
+            // Slingshot Pull Vector Visualization
+            if (cannon.isDragging) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(cannon.x, cannon.y);
+                ctx.lineTo(cannon.dragEndX, cannon.dragEndY);
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // --- GAME LOOP ---
+        function gameLoop(timestamp) {
+            const dt = Math.min(0.05, (timestamp - lastTime) / 1000);
+            lastTime = timestamp;
+
+            update(dt);
+            render();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- EVENT LISTENERS & UI HANDLERS ---
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            loadLevel(currentLevelIdx);
+        });
+
+        // Slingshot Drag & Touch Controls on Canvas
+        function handlePointerDown(x, y) {
+            if (wormhole.placementMode) {
+                placeWormholeExit(x, y);
+                return;
+            }
+
+            const dist = Math.hypot(x - cannon.x, y - cannon.y);
+            if (dist < 50) {
+                cannon.isDragging = true;
+                cannon.dragEndX = x;
+                cannon.dragEndY = y;
+            }
+        }
+
+        function handlePointerMove(x, y) {
+            if (cannon.isDragging) {
+                cannon.dragEndX = x;
+                cannon.dragEndY = y;
+                const dx = cannon.x - x;
+                const dy = cannon.y - y;
+                const angleRad = Math.atan2(dy, dx);
+                let angleDeg = Math.round((angleRad * 180) / Math.PI);
+                angleDeg = Math.max(0, Math.min(90, angleDeg));
+                
+                const pullDist = Math.hypot(dx, dy);
+                const power = Math.round(Math.min(150, Math.max(20, pullDist * 0.8)));
+
+                cannon.angle = angleDeg;
+                cannon.power = power;
+
+                document.getElementById('angleSlider').value = angleDeg;
+                document.getElementById('angleVal').innerText = `${angleDeg}°`;
+                document.getElementById('powerSlider').value = power;
+                document.getElementById('powerVal').innerText = `${power} m/s`;
+            }
+        }
+
+        function handlePointerUp() {
+            if (cannon.isDragging) {
+                cannon.isDragging = false;
+                fireCannon();
+            }
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 0) { // Left click
+                handlePointerDown(e.clientX, e.clientY);
+            }
+        });
+        canvas.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
+        canvas.addEventListener('mouseup', handlePointerUp);
+
+        // ⚡ REQUIREMENT 2: BIND CANVAS RIGHT CLICK FOR TANGENTIAL ACCELERATION BURST
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            triggerTangentialBurst();
+        });
+
+        // Touch Listeners
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) {
+                handlePointerDown(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
+        canvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
+        canvas.addEventListener('touchend', handlePointerUp);
+
+        // Keyboard Hotkeys
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'e' || e.key === 'E') {
+                triggerTangentialBurst();
+            } else if (e.key === 'w' || e.key === 'W') {
+                toggleWormholePlacement();
+            } else if (e.code === 'Space') {
+                e.preventDefault();
+                triggerDetonateOrSkill();
+            } else if (e.key >= '1' && e.key <= '5') {
+                const types = ['kinetic', 'cluster', 'blackhole', 'emp', 'beam'];
+                currentAmmoType = types[parseInt(e.key) - 1];
+                document.querySelectorAll('.ammo-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.ammo === currentAmmoType);
+                });
+                showToast(`已切换武器: ${getAmmoName(currentAmmoType)}`);
+            }
+        });
+
+        // UI Inputs Listeners
+        document.getElementById('angleSlider').addEventListener('input', (e) => {
+            cannon.angle = parseFloat(e.target.value);
+            document.getElementById('angleVal').innerText = `${cannon.angle}°`;
+        });
+        document.getElementById('powerSlider').addEventListener('input', (e) => {
+            cannon.power = parseFloat(e.target.value);
+            document.getElementById('powerVal').innerText = `${cannon.power} m/s`;
+        });
+        document.getElementById('massSlider').addEventListener('input', (e) => {
+            cannon.mass = parseFloat(e.target.value);
+            document.getElementById('massVal').innerText = `${cannon.mass} kg`;
+        });
+        document.getElementById('gSlider').addEventListener('input', (e) => {
+            cannon.gFactor = parseFloat(e.target.value);
+            document.getElementById('gVal').innerText = `${cannon.gFactor}x`;
+        });
+
+        document.getElementById('gravityModeSelect').addEventListener('change', (e) => {
+            globalGravityMode = parseFloat(e.target.value);
+            showToast(`环境重力已更新为: ${globalGravityMode}G`);
+        });
+
+        document.getElementById('levelSelect').addEventListener('change', (e) => {
+            loadLevel(parseInt(e.target.value));
+        });
+
+        document.querySelectorAll('.ammo-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.ammo-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentAmmoType = btn.dataset.ammo;
+                showToast(`已切换弹种: ${getAmmoName(currentAmmoType)}`);
+            });
+        });
+
+        // Action Buttons
+        document.getElementById('fireBtn').addEventListener('click', fireCannon);
+        document.getElementById('tangentialBurstBtn').addEventListener('click', triggerTangentialBurst);
+        document.getElementById('detonateBtn').addEventListener('click', triggerDetonateOrSkill);
+        document.getElementById('wormholeBtn').addEventListener('click', toggleWormholePlacement);
+        document.getElementById('resetLevelBtn').addEventListener('click', () => loadLevel(currentLevelIdx));
+
+        // Toggles
+        document.getElementById('toggleGridBtn').addEventListener('click', () => {
+            isGridEnabled = !isGridEnabled;
+            showToast(isGridEnabled ? "🌐 时空网格已开启" : "🌐 时空网格已关闭");
+        });
+
+        document.getElementById('toggleTelemetryBtn').addEventListener('click', () => {
+            isTelemetryEnabled = !isTelemetryEnabled;
+            document.getElementById('telemetryPanel').style.display = isTelemetryEnabled ? 'block' : 'none';
+        });
+
+        document.getElementById('toggleSoundBtn').addEventListener('click', () => {
+            sounds.enabled = !sounds.enabled;
+            document.getElementById('soundIcon').innerText = sounds.enabled ? "🔊 音效" : "🔇 静音";
+        });
+
+        // Modal Controls
+        document.getElementById('modalRetryBtn').addEventListener('click', () => {
+            document.getElementById('resultModal').classList.add('hidden');
+            loadLevel(currentLevelIdx);
+        });
+
+        document.getElementById('modalNextBtn').addEventListener('click', () => {
+            document.getElementById('resultModal').classList.add('hidden');
+            const nextLvl = (currentLevelIdx + 1) % LEVELS.length;
+            document.getElementById('levelSelect').value = nextLvl;
+            loadLevel(nextLvl);
+        });
+
+        // INITIAL START
+        window.onload = function () {
+            resizeCanvas();
+            loadLevel(0);
+            requestAnimationFrame(gameLoop);
+        };
+    </script>
+</body>
+</html>
